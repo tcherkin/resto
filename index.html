@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Калкулатор за ресто</title>
+  <style>
+:root{
+  /* РАЗМЕРИ (остават същите) */
+  --btnW: 62px;
+  --gap: 8px;
+  --inputH: 44px;
+  --radius: 14px;
+
+  --inputW: calc(var(--btnW) * 2 + var(--gap));      /* 2 бутона */
+  --toggleW: calc(var(--btnW) * 2 + var(--gap));     /* 2 бутона */
+  --rowW: calc(var(--inputW) + var(--gap) + var(--toggleW));
+
+  /* ===== СТАРА ТЪМНА ЦВЕТОВА ТЕМА ===== */
+  --bg: #0b1220;
+  --panel: rgba(255,255,255,.08);
+  --panel-strong: rgba(255,255,255,.12);
+
+  --border: rgba(255,255,255,.18);
+  --border-soft: rgba(255,255,255,.10);
+
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.65);
+
+  --accent-blue: rgba(120,190,255,.55);
+  --accent-green: rgba(150,255,190,.95);
+
+  --shadow: 0 18px 50px rgba(0,0,0,.55);
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  color: var(--text);
+
+  background:
+    radial-gradient(900px 600px at 15% 10%, rgba(80,150,255,.22), transparent 60%),
+    radial-gradient(700px 520px at 85% 80%, rgba(120,255,200,.18), transparent 55%),
+    var(--bg);
+}
+
+.card{
+  width: calc(var(--rowW) + 28px); /* 14px padding ляво + 14px дясно */
+  background: linear-gradient(180deg, var(--panel), rgba(255,255,255,.05));
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 16px 14px 14px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:10px;
+}
+.euro-badge{
+  width:42px;
+  height:42px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background: rgba(255,255,255,.12);
+  border:1px solid var(--border);
+  font-size:22px;
+  font-weight:800;
+}
+h1{
+  margin:0;
+  font-size:18px;
+  letter-spacing:.2px;
+}
+
+/* КУРС */
+.rate{
+  margin: 6px 0 14px;
+  font-size:13px;
+  color: var(--muted);
+  text-align:center;
+}
+
+/* ПОЛЕТА */
+.field{ margin-bottom:10px; }
+
+.label{
+  font-size:13px;
+  color: var(--muted);
+  margin: 0 0 6px 2px;
+}
+
+.row{
+  display:flex;
+  align-items:center;
+  gap: var(--gap);
+  width: var(--rowW);
+}
+
+input[type="text"]{
+  width: var(--inputW);
+  height: var(--inputH);
+  border-radius: var(--radius);
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.35);
+  color: var(--text);
+  padding: 0 12px;
+  font-size:16px;
+  outline:none;
+}
+
+input::placeholder{ color: rgba(255,255,255,.35); }
+
+input:focus{
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 3px rgba(120,190,255,.18);
+}
+
+input[readonly]{
+  background: rgba(255,255,255,.06);
+}
+
+/* ВАЛУТЕН СЛАЙДЕР */
+.toggle{
+  width: var(--toggleW);
+  height: var(--inputH);
+  border-radius: var(--radius);
+  border:1px solid var(--border);
+  background: rgba(0,0,0,.35);
+  position:relative;
+  overflow:hidden;
+  display:flex;
+}
+
+.toggle button{
+  width:50%;
+  height:100%;
+  border:0;
+  background:transparent;
+  font-weight:800;
+  font-size:13px;
+  color: var(--muted);
+  cursor:pointer;
+  position:relative;
+  z-index:2;
+}
+
+.toggle .thumb{
+  position:absolute;
+  top:3px;
+  bottom:3px;
+  width: calc(50% - 6px);
+  left:3px;
+  border-radius: calc(var(--radius) - 3px);
+  background: rgba(255,255,255,.95);
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  transition: transform .18s ease;
+  z-index:1;
+}
+
+.toggle[data-value="EUR"] .thumb{
+  transform: translateX(calc(100% + 6px));
+}
+
+.toggle[data-value="BGN"] button[data-c="BGN"],
+.toggle[data-value="EUR"] button[data-c="EUR"]{
+  color:#0b1220;
+}
+
+/* БЪРЗИ СУМИ (3x3) */
+.quick-wrap{
+  width: var(--rowW);
+  margin: 8px 0 12px;
+}
+
+.quick-grid{
+  display:grid;
+  grid-template-columns: repeat(3, var(--btnW));
+  gap: var(--gap);
+}
+
+.qbtn{
+  width: var(--btnW);
+  height:40px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.10);
+  color: var(--text);
+  font-weight:800;
+  cursor:pointer;
+}
+
+.qbtn:active{
+  transform: translateY(1px);
+}
+
+/* ИЗЧИСТИ */
+.actions{
+  width: var(--rowW);
+  display:flex;
+  justify-content:center;
+}
+
+.clear{
+  width: calc(var(--btnW) * 4 + var(--gap) * 3); /* 4 бутона */
+  height:46px;
+  border-radius:16px;
+  border:1px solid var(--border);
+  background: rgba(255,255,255,.12);
+  color: var(--text);
+  font-weight:800;
+  cursor:pointer;
+}
+.clear:hover{
+  background: rgba(255,255,255,.16);
+}
+.clear:active{
+  transform: translateY(1px);
+}
+.qbtn:hover{
+  background: rgba(255,255,255,.16);
+}
+</style>
+
+</head>
+
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="euro-badge">€</div>
+      <h1>Калкулатор за ресто</h1>
+    </div>
+
+    <div class="rate" id="rateBox">Курс (фиксиран): 1 EUR = 1.95583 BGN</div>
+
+    <!-- Цена -->
+    <div class="field">
+      <div class="label">Цена на продукт</div>
+      <div class="row">
+        <input id="price" type="text" inputmode="decimal" placeholder="0.00" />
+        <div class="toggle" id="priceCur" data-value="BGN" aria-label="Валута за цена">
+          <div class="thumb"></div>
+          <button type="button" data-c="BGN">BGN</button>
+          <button type="button" data-c="EUR">EUR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Платена сума -->
+    <div class="field">
+      <div class="label">Платена сума</div>
+      <div class="row">
+        <input id="paid" type="text" inputmode="decimal" placeholder="0.00" />
+        <div class="toggle" id="paidCur" data-value="BGN" aria-label="Валута за платено">
+          <div class="thumb"></div>
+          <button type="button" data-c="BGN">BGN</button>
+          <button type="button" data-c="EUR">EUR</button>
+        </div>
+      </div>
+
+      <!-- Бързи суми под платената сума -->
+      <div class="quick-wrap">
+        <div class="quick-grid" id="quickGrid"></div>
+      </div>
+    </div>
+
+    <!-- Ресто -->
+    <div class="field">
+      <div class="label">Ресто</div>
+      <div class="row">
+        <input id="change" type="text" readonly placeholder="0.00" />
+        <div class="toggle" id="changeCur" data-value="BGN" aria-label="Валута за ресто">
+          <div class="thumb"></div>
+          <button type="button" data-c="BGN">BGN</button>
+          <button type="button" data-c="EUR">EUR</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="clear" id="clearBtn" type="button">Изчисти</button>
+    </div>
+  </div>
+
+  <script>
+    // Фиксиран курс (показва се, но не се сменя)
+    const EUR_TO_BGN = 1.95583;
+
+    const elPrice = document.getElementById('price');
+    const elPaid = document.getElementById('paid');
+    const elChange = document.getElementById('change');
+
+    const tPrice = document.getElementById('priceCur');
+    const tPaid  = document.getElementById('paidCur');
+    const tChange= document.getElementById('changeCur');
+
+    const quickGrid = document.getElementById('quickGrid');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const quickValues = [0.10, 0.20, 0.50, 1, 2, 5, 10, 20, 50];
+
+    function parseMoney(str){
+      // Позволява 12,34 или 12.34
+      const s = (str || '').toString().trim().replace(/\s+/g,'').replace(',', '.');
+      if(!s) return 0;
+      const n = Number(s);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function fmtMoney(n){
+      // 2 знака, с точка (може да го смениш на запетая ако искаш)
+      return (Math.round((n + Number.EPSILON) * 100) / 100).toFixed(2);
+    }
+
+    function toBGN(amount, cur){
+      return cur === 'EUR' ? amount * EUR_TO_BGN : amount;
+    }
+    function fromBGN(amountBGN, cur){
+      return cur === 'EUR' ? amountBGN / EUR_TO_BGN : amountBGN;
+    }
+
+    function setToggle(toggleEl, value){
+      toggleEl.dataset.value = value; // BGN или EUR
+      recalc();
+    }
+
+    function wireToggle(toggleEl){
+      toggleEl.querySelectorAll('button').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          setToggle(toggleEl, btn.dataset.c);
+        });
+      });
+    }
+
+    function recalc(){
+      const priceVal = parseMoney(elPrice.value);
+      const paidVal  = parseMoney(elPaid.value);
+
+      const priceCur = tPrice.dataset.value;
+      const paidCur  = tPaid.dataset.value;
+      const outCur   = tChange.dataset.value;
+
+      // Всичко в BGN
+      const priceBGN = toBGN(priceVal, priceCur);
+      const paidBGN  = toBGN(paidVal,  paidCur);
+
+      const changeBGN = paidBGN - priceBGN;
+      const out = fromBGN(changeBGN, outCur);
+
+      elChange.value = fmtMoney(out);
+    }
+
+    function addToPaid(v){
+      const curPaid = tPaid.dataset.value; // добавяме в текущата валута на "Платена сума"
+      const current = parseMoney(elPaid.value);
+      elPaid.value = fmtMoney(current + v);
+      recalc();
+    }
+
+    // Създаваме 2x5 бутони
+    quickValues.forEach(v=>{
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'qbtn';
+      b.textContent = (v < 1 ? v.toFixed(2) : String(v));
+      b.addEventListener('click', ()=> addToPaid(v));
+      quickGrid.appendChild(b);
+    });
+
+    // Връзваме toggle-ите (Независими!)
+    wireToggle(tPrice);
+    wireToggle(tPaid);
+    wireToggle(tChange);
+
+    // Слушаме input
+    ['input','change'].forEach(evt=>{
+      elPrice.addEventListener(evt, recalc);
+      elPaid.addEventListener(evt, recalc);
+    });
+
+    // Изчистване
+    clearBtn.addEventListener('click', ()=>{
+      elPrice.value = '';
+      elPaid.value = '';
+      elChange.value = '';
+      // не пипаме валутите (остават както са избрани)
+      recalc();
+      elPrice.focus();
+    });
+
+    // Първоначално
+    recalc();
+  </script>
+  
+</body>
+</html>
