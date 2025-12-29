@@ -187,7 +187,7 @@ input[readonly]{
 
 .quick-grid{
   display:grid;
-  grid-template-columns: repeat(3, var(--btnW));
+  grid-template-columns: repeat(4, var(--btnW));
   gap: var(--gap);
 }
 
@@ -309,7 +309,7 @@ input[readonly]{
     const quickGrid = document.getElementById('quickGrid');
     const clearBtn = document.getElementById('clearBtn');
 
-    const quickValues = [0.10, 0.20, 0.50, 1, 2, 5, 10, 20, 50];
+    const quickValues = [0.05, 0.10, 0.20, 0.50, 1, 2, 5, 10, 20, 50, 100, 200];
 
     function parseMoney(str){
       // Позволява 12,34 или 12.34
@@ -401,6 +401,10 @@ input[readonly]{
     });
 
     // Първоначално
+	setToggle(tPrice, "EUR");
+	setToggle(tPaid, "EUR");
+	setToggle(tChange, "EUR");
+
     recalc();
   </script>
   
